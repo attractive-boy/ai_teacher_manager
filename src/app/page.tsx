@@ -1,103 +1,214 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import {
+  LockOutlined,
+  UserOutlined,
+} from '@ant-design/icons';
+import {
+  LoginFormPage,
+  ProConfigProvider,
+  ProFormCheckbox,
+  ProFormText,
+} from '@ant-design/pro-components';
+import { Button, Divider, Space, message, theme, Modal } from 'antd';
+import type { CSSProperties } from 'react';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+const iconStyles: CSSProperties = {
+  color: 'rgba(0, 0, 0, 0.2)',
+  fontSize: '18px',
+  verticalAlign: 'middle',
+  cursor: 'pointer',
+};
+
+const Page = () => {
+  const { token } = theme.useToken();
+  const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // 处理忘记密码点击
+  const handleForgotPassword = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalOk = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleModalCancel = () => {
+    setIsModalOpen(false);
+  };
+
+  // 检查自动登录
+  useEffect(() => {
+    const checkAutoLogin = async () => {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+      const autoLogin = localStorage.getItem('autoLogin') === 'true';
+
+      if (savedToken && savedUser && autoLogin) {
+        try {
+          // 验证 token 是否有效
+          const response = await fetch('/api/auth/verify', {
+            headers: {
+              'Authorization': `Bearer ${savedToken}`
+            }
+          });
+
+          if (response.ok) {
+            const user = JSON.parse(savedUser);
+            message.success('自动登录成功');
+            router.push('/dashboard');
+          } else {
+            // token 无效，清除存储的信息
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            localStorage.removeItem('autoLogin');
+          }
+        } catch (error) {
+          console.error('自动登录验证失败:', error);
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('autoLogin');
+        }
+      }
+    };
+
+    checkAutoLogin();
+  }, [router]);
+
+  const handleSubmit = async (values: any) => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || '登录失败');
+      }
+
+      // 保存 token 和用户信息到 localStorage
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // 保存自动登录设置
+      if (values.autoLogin) {
+        localStorage.setItem('autoLogin', 'true');
+      } else {
+        localStorage.removeItem('autoLogin');
+      }
+
+      message.success('登录成功');
+      router.push('/dashboard/students');
+    } catch (error: any) {
+      message.error(error.message || '登录失败，请重试');
+    }
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div
+      style={{
+        backgroundColor: 'white',
+        height: '100vh',
+      }}
+    >
+      <LoginFormPage
+        backgroundImageUrl="https://pic1.zhimg.com/v2-2200ec4bbdf9d645831e08dc42320676_1440w.jpg"
+        logo="https://github.githubassets.com/favicons/favicon.png"
+        backgroundVideoUrl="https://pic1.zhimg.com/v2-2200ec4bbdf9d645831e08dc42320676_1440w.jpg"
+        title="课堂任务评价板管理系统"
+        containerStyle={{
+          backgroundColor: 'rgba(0, 0, 0,0.65)',
+          backdropFilter: 'blur(4px)',
+        }}
+        subTitle="智能教学管理平台"
+        onFinish={handleSubmit}
+      >
+        <ProFormText
+          name="username"
+          fieldProps={{
+            size: 'large',
+            prefix: (
+              <UserOutlined
+                style={{
+                  color: token.colorText,
+                }}
+                className={'prefixIcon'}
+              />
+            ),
+          }}
+          placeholder={'请输入用户名'}
+          rules={[
+            {
+              required: true,
+              message: '请输入用户名!',
+            },
+          ]}
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
+        <ProFormText.Password
+          name="password"
+          fieldProps={{
+            size: 'large',
+            prefix: (
+              <LockOutlined
+                style={{
+                  color: token.colorText,
+                }}
+                className={'prefixIcon'}
+              />
+            ),
+          }}
+          placeholder={'请输入密码'}
+          rules={[
+            {
+              required: true,
+              message: '请输入密码！',
+            },
+          ]}
+        />
+        <div
+          style={{
+            marginBlockEnd: 24,
+          }}
+        >
+          <ProFormCheckbox noStyle name="autoLogin">
+            自动登录
+          </ProFormCheckbox>
           <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            style={{
+              float: 'right',
+            }}
+            onClick={handleForgotPassword}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
+            忘记密码
           </a>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </LoginFormPage>
+
+      <Modal
+        title="忘记密码"
+        open={isModalOpen}
+        onOk={handleModalOk}
+        onCancel={handleModalCancel}
+        centered
+      >
+        <p>请联系系统管理员重置密码！</p>
+      </Modal>
     </div>
   );
-}
+};
+
+export default () => {
+  return (
+    <ProConfigProvider dark>
+      <Page />
+    </ProConfigProvider>
+  );
+};
