@@ -19,16 +19,13 @@ type StudentItem = {
   updatedAt: string;
 };
 
-export const waitTimePromise = async (time: number = 100) => {
-  return new Promise((resolve) => {
+// 工具函数移到组件内部
+const waitTime = async (time: number = 100) => {
+  await new Promise((resolve) => {
     setTimeout(() => {
       resolve(true);
     }, time);
   });
-};
-
-export const waitTime = async (time: number = 100) => {
-  await waitTimePromise(time);
 };
 
 const columns: ProColumns<StudentItem>[] = [
