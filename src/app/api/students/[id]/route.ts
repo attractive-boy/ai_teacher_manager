@@ -3,9 +3,10 @@ import { prisma } from '@/lib/prisma';
 
 
 export async function DELETE(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: Promise<{ id: any }> }
 ): Promise<NextResponse> {
-  const studentId = parseInt(request.url.split('/').pop() || '');
+  const studentId  = (await params).id
 
   try {
     const student = await prisma.student.findUnique({
@@ -27,9 +28,10 @@ export async function DELETE(
 }
 
 export async function PUT(
-  request: NextRequest
+  request: NextRequest,
+  { params }: { params: Promise<{ id: any }> }
 ): Promise<NextResponse> {
-  const studentId = parseInt(request.url.split('/').pop() || '');
+  const studentId = (await params).id
 
   try {
     const student = await prisma.student.findUnique({
