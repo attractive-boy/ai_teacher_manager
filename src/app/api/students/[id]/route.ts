@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 // 删除学生
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
 
     // 检查学生是否存在
     const student = await prisma.student.findUnique({
@@ -41,10 +41,10 @@ export async function DELETE(
 // 更新学生信息
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
   try {
-    const id = parseInt(params.id);
+    const id = parseInt(context.params.id);
     const body = await request.json();
     const { name, category, classId } = body;
 
