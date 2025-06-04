@@ -45,54 +45,54 @@ export async function DELETE(
   }
 }
 
-// 更新学生信息
-export async function PUT(
-  request: NextRequest,
-  context: RouteContext
-) {
-  try {
-    const id = parseInt(context.params.id);
-    const body = await request.json();
-    const { name, category, classId } = body;
+// // 更新学生信息
+// export async function PUT(
+//   request: NextRequest,
+//   context: RouteContext
+// ) {
+//   try {
+//     const id = parseInt(context.params.id);
+//     const body = await request.json();
+//     const { name, category, classId } = body;
 
-    // 检查学生是否存在
-    const student = await prisma.student.findUnique({
-      where: { id },
-    });
+//     // 检查学生是否存在
+//     const student = await prisma.student.findUnique({
+//       where: { id },
+//     });
 
-    if (!student) {
-      return NextResponse.json(
-        { error: '学生不存在' },
-        { status: 404 }
-      );
-    }
+//     if (!student) {
+//       return NextResponse.json(
+//         { error: '学生不存在' },
+//         { status: 404 }
+//       );
+//     }
 
-    // 更新学生信息
-    const updatedStudent = await prisma.student.update({
-      where: { id },
-      data: {
-        name,
-        category,
-        classId,
-      },
-      include: {
-        class: {
-          select: {
-            name: true,
-          },
-        },
-      },
-    });
+//     // 更新学生信息
+//     const updatedStudent = await prisma.student.update({
+//       where: { id },
+//       data: {
+//         name,
+//         category,
+//         classId,
+//       },
+//       include: {
+//         class: {
+//           select: {
+//             name: true,
+//           },
+//         },
+//       },
+//     });
 
-    return NextResponse.json({
-      ...updatedStudent,
-      className: updatedStudent.class.name,
-    });
-  } catch (error) {
-    console.error('更新学生信息失败:', error);
-    return NextResponse.json(
-      { error: '更新学生信息失败' },
-      { status: 500 }
-    );
-  }
-} 
+//     return NextResponse.json({
+//       ...updatedStudent,
+//       className: updatedStudent.class.name,
+//     });
+//   } catch (error) {
+//     console.error('更新学生信息失败:', error);
+//     return NextResponse.json(
+//       { error: '更新学生信息失败' },
+//       { status: 500 }
+//     );
+//   }
+// } 
