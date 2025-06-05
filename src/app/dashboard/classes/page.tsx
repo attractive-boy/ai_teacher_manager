@@ -1,26 +1,22 @@
 "use client";
 
-import { EllipsisOutlined, PlusOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
+import { PlusOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { ProTable, TableDropdown } from '@ant-design/pro-components';
-import { Button, Dropdown, Space, Tag, message, Popconfirm, Upload } from 'antd';
+import { ProTable } from '@ant-design/pro-components';
+import { Button, message, Popconfirm } from 'antd';
 import { useRef } from 'react';
-import StudentForm from './components/StudentForm';
 import { useState } from 'react';
-import * as XLSX from 'xlsx';
+import ClassForm from './components/ClassForm';
 
-// 定义学生数据类型
-type StudentItem = {
+// 定义班级数据类型
+type ClassItem = {
   id: number;
   name: string;
-  category: string;
-  classId: number;
-  className: string;
   createdAt: string;
   updatedAt: string;
 };
 
-// 工具函数移到组件内部
+// 工具函数
 const waitTime = async (time: number = 100) => {
   await new Promise((resolve) => {
     setTimeout(() => {
@@ -29,18 +25,18 @@ const waitTime = async (time: number = 100) => {
   });
 };
 
-const columns: ProColumns<StudentItem>[] = [
+const columns: ProColumns<ClassItem>[] = [
   {
     dataIndex: 'index',
     valueType: 'indexBorder',
     width: 48,
   },
   {
-    title: '姓名',
+    title: '班级名称',
     dataIndex: 'name',
     copyable: true,
     ellipsis: true,
-    tooltip: '姓名过长会自动收缩',
+    tooltip: '班级名称过长会自动收缩',
     formItemProps: {
       rules: [
         {
@@ -49,22 +45,6 @@ const columns: ProColumns<StudentItem>[] = [
         },
       ],
     },
-  },
-  {
-    title: '类别',
-    dataIndex: 'category',
-    valueEnum: {
-      'A': { text: 'A类', status: 'Success' },
-      'B': { text: 'B类', status: 'Warning' },
-      'C': { text: 'C类', status: 'Error' },
-    },
-    filters: true,
-    onFilter: true,
-  },
-  {
-    title: '所属班级',
-    dataIndex: 'className',
-    ellipsis: true,
   },
   {
     title: '创建时间',
@@ -102,10 +82,10 @@ const columns: ProColumns<StudentItem>[] = [
       </a>,
       <Popconfirm
         key="delete"
-        title="确定要删除这个学生吗？"
+        title="确定要删除这个班级吗？"
         onConfirm={async () => {
           try {
-            const response = await fetch(`/api/students/${record.id}`, {
+            const response = await fetch(`/api/classes/${record.id}`, {
               method: 'DELETE',
             });
 
@@ -128,14 +108,14 @@ const columns: ProColumns<StudentItem>[] = [
   },
 ];
 
-export default function StudentPage() {
+export default function ClassPage() {
   const actionRef = useRef<ActionType>(null);
   const [formOpen, setFormOpen] = useState(false);
-  const [currentStudent, setCurrentStudent] = useState<StudentItem | null>(null);
+  const [currentClass, setCurrentClass] = useState<ClassItem | null>(null);
 
   return (
     <>
-      <ProTable<StudentItem>
+      <ProTable<ClassItem>
         columns={columns}
         actionRef={actionRef}
         cardBordered
@@ -151,7 +131,7 @@ export default function StudentPage() {
           });
 
           try {
-            const response = await fetch(`/api/students?${queryParams.toString()}`);
+            const response = await fetch(`/api/classes?${queryParams.toString()}`);
             const data = await response.json();
             return {
               data: data.items,
@@ -159,7 +139,7 @@ export default function StudentPage() {
               total: data.total,
             };
           } catch (error) {
-            message.error('获取学生列表失败');
+            message.error('获取班级列表失败');
             return {
               data: [],
               success: false,
@@ -171,7 +151,7 @@ export default function StudentPage() {
           type: 'multiple',
         }}
         columnsState={{
-          persistenceKey: 'pro-table-student-demos',
+          persistenceKey: 'pro-table-class-demos',
           persistenceType: 'localStorage',
           defaultValue: {
             option: { fixed: 'right', disable: true },
@@ -205,91 +185,29 @@ export default function StudentPage() {
           onChange: (page) => console.log(page),
         }}
         dateFormatter="string"
-        headerTitle="学生列表"
+        headerTitle="班级列表"
         toolBarRender={() => [
           <Button
             key="button"
             icon={<PlusOutlined />}
             type="primary"
             onClick={() => {
-              setCurrentStudent(null);
+              setCurrentClass(null);
               setFormOpen(true);
             }}
           >
             新建
           </Button>,
-          <Button
-            key="download"
-            icon={<DownloadOutlined />}
-            onClick={() => {
-              // 创建工作簿
-              const wb = XLSX.utils.book_new();
-              // 创建工作表数据
-              const wsData = [
-                ['姓名', '类别', '班级名称'], // 表头
-                ['张三', 'A', '计算机1班'], // 示例数据
-                ['李四', 'B', '计算机2班'],
-                ['王五', 'C', '计算机1班'],
-              ];
-              const ws = XLSX.utils.aoa_to_sheet(wsData);
-              // 将工作表添加到工作簿
-              XLSX.utils.book_append_sheet(wb, ws, '学生导入模板');
-              // 下载文件
-              XLSX.writeFile(wb, '学生导入模板.xlsx');
-            }}
-          >
-            下载模板
-          </Button>,
-          <Upload
-            key="upload"
-            accept=".xlsx,.xls"
-            showUploadList={false}
-            beforeUpload={(file) => {
-              const reader = new FileReader();
-              reader.onload = async (e) => {
-                try {
-                  const data = e.target?.result;
-                  const workbook = XLSX.read(data, { type: 'binary' });
-                  const sheetName = workbook.SheetNames[0];
-                  const worksheet = workbook.Sheets[sheetName];
-                  const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-                  // 发送数据到后端
-                  const response = await fetch('/api/students/batch', {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({ students: jsonData }),
-                  });
-
-                  if (response.ok) {
-                    message.success('导入成功');
-                    // 刷新列表
-                    actionRef.current?.reload();
-                  } else {
-                    message.error('导入失败');
-                  }
-                } catch (error) {
-                  message.error('文件解析失败');
-                }
-              };
-              reader.readAsBinaryString(file);
-              return false; // 阻止自动上传
-            }}
-          >
-            <Button icon={<UploadOutlined />}>导入</Button>
-          </Upload>,
         ]}
       />
 
-      <StudentForm
+      <ClassForm
         open={formOpen}
         onOpenChange={setFormOpen}
-        initialValues={currentStudent}
+        initialValues={currentClass}
         onSuccess={() => {
           setFormOpen(false);
-          setCurrentStudent(null);
+          setCurrentClass(null);
           actionRef.current?.reload();
         }}
       />

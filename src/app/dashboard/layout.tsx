@@ -41,6 +41,7 @@ export default function DashboardLayout({
     >
       <ProLayout
         siderWidth={216}
+        title="课堂任务评价板管理"
         bgLayoutImgList={[
           {
             src: 'https://img.alicdn.com/imgextra/i2/O1CN01O4etvp1DvpFLKfuWq_!!6000000000279-2-tps-609-606.png',
