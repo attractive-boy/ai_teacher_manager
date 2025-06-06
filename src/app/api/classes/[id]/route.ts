@@ -4,12 +4,12 @@ import { prisma } from '@/lib/prisma';
 // 获取单个班级
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: any }> }
 ) {
   try {
     const class_ = await prisma.class.findUnique({
       where: {
-        id: parseInt(params.id),
+        id: parseInt((await params).id),
       },
     });
 
@@ -33,7 +33,7 @@ export async function GET(
 // 更新班级
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: any }> }
 ) {
   try {
     const body = await request.json();
@@ -41,7 +41,7 @@ export async function PUT(
 
     const class_ = await prisma.class.update({
       where: {
-        id: parseInt(params.id),
+        id: parseInt((await params).id),
       },
       data: {
         name,
