@@ -61,12 +61,12 @@ export async function PUT(
 // 删除班级
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: any }> }
 ) {
   try {
     await prisma.class.delete({
       where: {
-        id: parseInt(params.id),
+        id: parseInt((await params).id),
       },
     });
 

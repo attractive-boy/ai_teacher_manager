@@ -3,6 +3,10 @@ export default {
     path: '/',
     routes: [
       {
+        path: '/dashboard/users',
+        name: '用户管理',
+      },
+      {
         path: '/dashboard/students',
         name: '学生管理',
       },
