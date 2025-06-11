@@ -1,21 +1,14 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../src/generated/prisma"
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider     = "mysql"
+  url          = env("DATABASE_URL")
   relationMode = "prisma"
 }
 
-// 管理员表
 model Admin {
   id        Int      @id @default(autoincrement())
   username  String   @unique
@@ -27,94 +20,107 @@ model Admin {
   @@map("admin")
 }
 
-// 用户表（教师/家长）
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
-  role      Role     @default(TEACHER) // TEACHER 或 PARENT
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  classes   Class[]  // 教师关联的班级
-  evaluations Evaluation[] // 用户创建的评价
+  id          Int          @id @default(autoincrement())
+  name        String
+  password    String
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  role        Role         @default(TEACHER)
+  username    String       @unique
+  avatar      String?      // 添加头像字段，问号表示可选
+  classes     Class[]
+  evaluations Evaluation[]
 
   @@map("user")
 }
 
-// 班级表
 model Class {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  teachers  User[]   // 关联的教师
-  students  Student[] // 班级的学生
-  tasks     Task[]   // 班级的课堂任务
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  teachers  User[]
+  students  Student[]
+  tasks     Task[]
 
   @@map("class")
 }
 
-// 学生表
 model Student {
   id        Int      @id @default(autoincrement())
   name      String
-  category  String?  // 学生类别
+  category  String?
   classId   Int
-  class     Class    @relation(fields: [classId], references: [id])
-  scores    Score[]  // 学生的评分记录
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  class     Class    @relation(fields: [classId], references: [id])
+  scores    Score[]
 
   @@map("student")
 }
 
-// 课堂任务表
 model Task {
-  id          Int      @id @default(autoincrement())
-  title       String   // 任务名称
-  content     String   // 任务内容
+  id          Int          @id @default(autoincrement())
+  title       String
+  content     String
   classId     Int
-  class       Class    @relation(fields: [classId], references: [id])
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  evaluations Evaluation[] // 任务相关的评价
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  class       Class        @relation(fields: [classId], references: [id])
+  evaluations Evaluation[]
 
   @@map("task")
 }
 
-// 评价表
 model Evaluation {
-  id          Int      @id @default(autoincrement())
-  taskId      Int
-  task        Task     @relation(fields: [taskId], references: [id])
-  userId      Int      // 评价人（教师/家长）
-  user        User     @relation(fields: [userId], references: [id])
-  summary     String?  // AI生成的课堂小结
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  scores      Score[]  // 评价包含的分数
+  id        Int      @id @default(autoincrement())
+  taskId    Int
+  userId    Int
+  summary   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  task      Task     @relation(fields: [taskId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+  scores    Score[]
 
   @@map("evaluation")
 }
 
-// 评分表
 model Score {
-  id            Int      @id @default(autoincrement())
-  evaluationId  Int
-  evaluation    Evaluation @relation(fields: [evaluationId], references: [id])
-  studentId     Int
-  student       Student    @relation(fields: [studentId], references: [id])
-  teacherScore  Int      // 教师评分（1-3星）
-  studentScore  Int      // 学生评分（1-2星）
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id           Int        @id @default(autoincrement())
+  evaluationId Int
+  studentId    Int
+  teacherScore Int
+  studentScore Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  evaluation   Evaluation @relation(fields: [evaluationId], references: [id])
+  student      Student    @relation(fields: [studentId], references: [id])
 
   @@map("score")
 }
 
+model CozeConfig {
+  id        Int      @id @default(autoincrement())
+  token     String
+  botId     String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-// 用户角色枚举
+  @@map("coze_config")
+}
+
+model classtouser {
+  A Int
+  B Int
+
+  @@unique([A, B], map: "_ClassToUser_AB_unique")
+  @@index([B], map: "_ClassToUser_B_index")
+  @@map("_classtouser")
+}
+
 enum Role {
   TEACHER
   PARENT

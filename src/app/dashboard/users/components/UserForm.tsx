@@ -6,6 +6,7 @@ import {
   ProFormText,
 } from '@ant-design/pro-components';
 import { message } from 'antd';
+import { useEffect, useState } from 'react';
 
 type UserFormProps = {
   open: boolean;
@@ -20,6 +21,28 @@ export default function UserForm({
   onSuccess,
   initialValues,
 }: UserFormProps) {
+  const [classes, setClasses] = useState<{ label: string; value: number }[]>([]);
+
+  // 获取班级列表
+  useEffect(() => {
+    const fetchClasses = async () => {
+      try {
+        const response = await fetch('/api/classes');
+        const data = await response.json();
+        setClasses(data.items.map((item: any) => ({
+          label: item.name,
+          value: item.id,
+        })));
+      } catch (error) {
+        console.error('获取班级列表失败:', error);
+      }
+    };
+
+    if (open) {
+      fetchClasses();
+    }
+  }, [open]);
+
   return (
     <ModalForm
       title={initialValues ? '编辑用户' : '新建用户'}
@@ -81,6 +104,14 @@ export default function UserForm({
           { label: '家长', value: 'PARENT' },
         ]}
         rules={[{ required: true, message: '请选择角色' }]}
+      />
+      <ProFormSelect
+        name="classIds"
+        label="关联班级"
+        placeholder="请选择班级"
+        mode="multiple"
+        options={classes}
+        rules={[{ required: false }]}
       />
     </ModalForm>
   );

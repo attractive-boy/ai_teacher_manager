@@ -17,6 +17,10 @@ type UserItem = {
   role: 'TEACHER' | 'PARENT';
   createdAt: string;
   updatedAt: string;
+  classes: {
+    id: number;
+    name: string;
+  }[];
 };
 
 const waitTime = (time: number = 100) => {
@@ -68,6 +72,19 @@ export default function UserPage() {
       },
       filters: true,
       onFilter: true,
+    },
+    {
+      title: '关联班级',
+      dataIndex: 'classes',
+      render: (_, record) => (
+        <Space>
+          {record.classes?.map((cls) => (
+            <Tag key={cls.id} color="blue">
+              {cls.name}
+            </Tag>
+          ))}
+        </Space>
+      ),
     },
     {
       title: '创建时间',

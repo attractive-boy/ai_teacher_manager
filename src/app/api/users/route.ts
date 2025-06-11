@@ -33,6 +33,12 @@ export async function GET(request: Request) {
         role: true,
         createdAt: true,
         updatedAt: true,
+        classes: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
@@ -56,7 +62,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { username, password, name, role } = body;
+    const { username, password, name, role, classIds } = body;
 
     // 验证必填字段
     if (!username || !password || !name || !role) {
@@ -88,15 +94,13 @@ export async function POST(request: Request) {
         password: hashedPassword,
         name,
         role,
+        classes: {
+          connect: classIds ? classIds.map((id: number) => ({ id })) : []
+        }
       },
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      include: {
+        classes: true
+      }
     });
 
     return NextResponse.json(user);

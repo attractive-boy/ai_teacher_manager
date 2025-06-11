@@ -19,7 +19,7 @@
     "@ant-design/icons": "^6.0.0",
     "@ant-design/pro-components": "^2.8.7",
     "@emotion/css": "^11.13.5",
-    "@prisma/client": "^6.8.2",
+    "@prisma/client": "^6.9.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/jsonwebtoken": "^9.0.9",
     "antd": "^5.25.4",
@@ -28,7 +28,6 @@
     "jsonwebtoken": "^9.0.2",
     "next": "15.3.3",
     "next-connect": "^1.0.0",
-    "prisma": "^6.8.2",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "xlsx": "^0.18.5"
@@ -44,6 +43,7 @@
     "css-loader": "^7.1.2",
     "eslint": "^9",
     "eslint-config-next": "15.3.3",
+    "prisma": "^6.9.0",
     "style-loader": "^4.0.0",
     "tailwindcss": "^4.1.8",
     "typescript": "^5"

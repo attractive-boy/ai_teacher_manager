@@ -6,7 +6,11 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: any }> }
 ): Promise<NextResponse> {
-  const userId = (await params).id;
+  const userId = parseInt((await params).id);
+
+  if (isNaN(userId)) {
+    return NextResponse.json({ error: '无效的用户ID' }, { status: 400 });
+  }
 
   try {
     const user = await prisma.user.findUnique({
@@ -31,7 +35,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: any }> }
 ): Promise<NextResponse> {
-  const userId = (await params).id;
+  const userId = parseInt((await params).id);
+
+  if (isNaN(userId)) {
+    return NextResponse.json({ error: '无效的用户ID' }, { status: 400 });
+  }
 
   try {
     const user = await prisma.user.findUnique({
@@ -42,13 +50,31 @@ export async function PUT(
       return NextResponse.json({ error: '用户不存在' }, { status: 404 });
     }
 
-    const { username, password, name, role } = await request.json();
+    const { username, password, name, role, classIds } = await request.json();
     
+    // 如果用户名发生变化，检查新用户名是否已存在
+    if (username !== user.username) {
+      const existingUser = await prisma.user.findUnique({
+        where: { username },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          { error: '用户名已被使用' },
+          { status: 400 }
+        );
+      }
+    }
+
     // 准备更新数据
     const updateData: any = {
       username,
       name,
       role,
+      classes: {
+        set: [], // 先清空现有关联
+        connect: classIds ? classIds.map((id: number) => ({ id })) : []
+      }
     };
 
     // 如果提供了新密码，则更新密码
@@ -59,14 +85,9 @@ export async function PUT(
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: updateData,
-      select: {
-        id: true,
-        username: true,
-        name: true,
-        role: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      include: {
+        classes: true
+      }
     });
 
     return NextResponse.json(updatedUser);
